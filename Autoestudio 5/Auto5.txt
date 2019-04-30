@@ -1,0 +1,90 @@
+--A
+
+CREATE TABLE room (
+    id NUMBER(11) NOT NULL,
+    room_type VARCHAR(6),
+    max_occupancy NUMBER(11),
+    Details XMLTYPE NOT NULL);
+
+ALTER TABLE room ADD CONSTRAINT PK_ROOM PRIMARY KEY(id);
+
+insert into room values ( 101,'double', 2
+'< ?xml version="1.0"? >
+<Details>
+	<Beds>	
+		<bed> type = "double" </bed>
+		<bed> quantity = "1"  </bed>
+	</Beds>
+	<Flooring> 
+		<floor> type = "wood" </floor> 
+	</Flooring>
+	<Bathtubs> 
+		<bath> type = "shower" </bath> 
+	</Bathtubs>
+	<Views>
+		<view> type = "ocean" </view>
+	</Views>
+	<Decoration>
+		<artwork> name = "Sphere"</artwork>
+		<artwork> class = "abstract" </artwork>
+		<artwork> author = "Davor Cortes" </artwork>
+		<artwork> nationality = "Colombian" </artwork>
+	</Decoration>
+	<Print type= "minimalist"></Print>
+	<Color_of_curtains color= "Blue"></Color_of_curtains>
+	<Channels>
+		<channel> type ="Cable" </channel> 
+	</Channels>
+	<Comments>
+		<comment> date = "01/FEB/2019" </comment>
+		<comment> stars = "4" </comment>
+		<comment> justification = "Cumple con las espectativas."</comment>
+	</Comments>
+</Details>');
+
+
+--B
+--1. Los habitaciones con sólo una cama doble
+SELECT id FROM room WHERE EXTRACT(Details, '/Details/Beds/*bed[@name="double" and @quantity = "1"]') is not null;
+
+--2. Las habitaciones más económicas con vista al mar y a la montaña
+SELECT id FROM room WHERE EXTRACT(Details, '/Details/Views/*view[@type="ocean"]and view[@type="mountain"]') is not null;
+
+--3. Los tipos de habitaciones que ofrecen canal satélite de TV
+SELECT room_type FROM room WHERE EXTRACT(Details, '/Details/Channels/*Channel[@type="satellite"]') is not null;
+
+--4. El nombre de los pintores de los cuadros que decoran las habitaciones
+SELECT name FROM room WHERE EXTRACT(Details, '/Details/Decoration/*artwork') is not null;
+
+--6. El número de cinco estrellas que han logrado cada uno de los cuartos.
+SELECT COUNT(id) as Cantidad_cinco_estrellas FROM room WHERE EXTRACT(Details, '/Details/Comments/*comment[@stars = "5"]') is not null ORDER BY id;
+
+
+--C
+<?xml version= "1.0"?>
+<!DOCTYPE Details [
+	<!ELEMENT Details(Beds, Flooring, Bathtubs, Views, Decoration, Print, Color_of_courtains, Channels, Comments)>
+	<!ELEMENT Beds (bed)+>
+	<!ELEMENT bed (#PCDATA)>
+	<!ELEMENT Flooring(floor)>
+	<!ELEMENT floor (#PCDATA)>
+	<!ELEMENT Bathtubs(bath)?>
+	<!ELEMENT bath (#PCDATA)>
+	<!ELEMENT Views(view)+>
+	<!ELEMENT view (#PCDATA)>
+	<!ELEMENT Decorartion(artwork)+>
+	<!ELEMENT artwork (#PCDATA)>
+	<!ELEMENT Print(#PCDATA)>
+	<!ELEMENT Color_of_courtains(#PCDATA)>
+	<!ELEMENT Channels(channel)+>
+	<!ELEMENT channel(#PCDATA)>
+	<!ELEMENT Comments(comment)+>
+	<!ELEMENT comment (#PCDATA)>
+	<!ATTLIST bed name CDATA (double|stateroom|simple)>
+	<!ATTLIST bath type CDATA #REQUIRED>
+	<!ATTLIST view type CDATA #REQUIRED>
+	<!ATTLIST Color_of_courtains color CDATA (Green|Blue|Gray)>
+	<!ATTLIST comment date CDATA #REQUIRED>
+	<!ATTLIST comment stars CDATA #REQUIRED>
+	<!ATTLIST comment justification CDATA #REQUIRED>
+]>
